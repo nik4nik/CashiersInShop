@@ -63,11 +63,55 @@ export async function getAllCashiers() {
 }
 
 async function makeRequest(req: string, callback: Function, ...theArgs: any[]) {
-	await pool.query(req, theArgs, (err, result) => { callback(err, result?.rows) })
+	await pool.query(req, theArgs, (err, result) => {
+		callback(err, result?.command == "SELECT"? result.rows: result?.rowCount)
+	})
 }
 
-export function getCashier(callback: Function, cashierId: number) {
-	makeRequest("select name, email from cashiers where id = $1", callback, cashierId);
+/* чтобы убрать any для  параметра filter можно сделать:
+import {ParsedQs} from qs,
+но это кажется слишком громоздко, ничего лучше не придумал
+*/
+export async function getCashier(callback: Function, filter: any) {
+	let req: string = "select name, email from cashiers as c",
+		whereClause: string[] = [];
+	for (let key in filter) {
+		switch (key) {
+			case "age":
+				req += `
+					left join (
+						select id, (CURRENT_DATE - DateOfBirth)/365 as age from cashiers
+						) as ageFilter
+					on c.id = ageFilter.id
+					`;
+				whereClause.push(`ageFilter.age ${filter[key]}`);
+				break;
+			case "shifts":
+				req += `
+					right join (
+						select distinct Cashier from work_shifts
+						where WorkShiftType ${filter[key]}
+						) as work_shiftsFilter
+					on c.id = work_shiftsFilter.Cashier
+					`;
+				break;
+			case "exp":
+				req += `
+					left join (
+						select cashier, sum(enddate - startdate)/365 as experience from cashiers2shops
+							group by cashiers2shops.cashier) as experienceFilter
+						on c.id = experienceFilter.cashier
+					`;
+				whereClause.push(`experienceFilter.experience ${filter[key]}`);
+				break;
+			default:
+				whereClause.push(`${key} ${filter[key]}`);
+		}
+	}
+	if (whereClause.length)
+		req += " where " + whereClause.join(' and ');
+	console.log(req)
+	await pool.query(req, (err, result) => { callback(err, result?.rows) })
 }
 
 export async function createCashier(cashier: ICashier, callback: Function) {
