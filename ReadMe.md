@@ -1,0 +1,1 @@
+The folder ./Other contains test results, database creation script and database scheme.
