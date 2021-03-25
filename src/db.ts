@@ -35,7 +35,10 @@ inner join (
 			select id from shops
 				where name = 'Arsen' or name = 'Silpo')) as other
 	on atb.id = other.id and other.startDate <= atb.startDate`, [shopId])
-	.then(res => console.table(res.rows))
+	.then(res => {
+		console.log("getTargetCashiers1");
+		console.table(res.rows);
+	})
 	.catch(err => console.log('Database query error: ' + err.message));
 }
 
@@ -52,13 +55,19 @@ select cs.name, cs.Email from work_shifts as ws
 	left join cashiers as cs
 		on cs.id = ws.Cashier
 where Shop = 1 and (select extract(isodow from Date) = 1) and WorkShiftType = 3 and regNum.Number % 2 > 0`)
-	.then(res => console.table(res.rows))
+	.then(res => {
+		console.log("getTargetCashiers2");
+		console.table(res.rows);
+	})
 	.catch(err => console.log('Database query error: ' + err.message));
 }
 
 export async function getAllCashiers() {
- 	await pool.query("select name, email from cashiers")
-	.then(res => console.table(res.rows))
+ 	await pool.query("select name, email, dateOfBirth from cashiers")
+	.then(res => {
+		console.log("List of cashiers");
+		console.table(res.rows)
+	})
 	.catch(err => console.log('Database query error: ' + err.message));
 }
 
