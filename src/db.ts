@@ -1,3 +1,4 @@
+import { Request } from "express";
 import { Pool } from 'pg';
 import { ICashier } from './model';
 import * as dotenv from "dotenv";
@@ -77,13 +78,10 @@ async function makeRequest(req: string, callback: Function, ...theArgs: any[]) {
 	})
 }
 
-/* чтобы убрать any для  параметра filter можно сделать:
-import {ParsedQs} from qs,
-но это кажется слишком громоздко, ничего лучше не придумал
-*/
-export async function getCashier(callback: Function, filter: any) {
+export async function getCashier(callback: Function, rq: Request) {
 	let req: string = "select name, email from cashiers as c",
-		whereClause: string[] = [];
+		whereClause: string[] = [],
+		filter = rq.query;
 	for (let key in filter) {
 		switch (key) {
 			case "age":

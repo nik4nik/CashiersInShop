@@ -16,7 +16,7 @@ appRouter.get("/", (req: Request, res: Response) => {
 			res.status(200).json({"cashiers": cashiers});
 			console.table(cashiers);
 		}
-	}, req.query);
+	}, req);
 });
 
 appRouter.post("/", (req: Request, res: Response) => {
